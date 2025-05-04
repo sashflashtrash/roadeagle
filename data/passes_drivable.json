@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Col de la Croix",
+    "countries": [
+      "🇨🇭"
+    ],
+    "status": "closed",
+    "canton": "VD",
+    "length": 22,
+    "height": 1778,
+    "opens": "Mai",
+    "closes": "November",
+    "description": {
+      "DE": "Panoramareiche Strecke mit Blick auf die Waadtländer Alpen.",
+      "EN": "Scenic route with views of the Vaud Alps.",
+      "IT": "Percorso panoramico con vista sulle Alpi del Vaud.",
+      "FR": "Route panoramique avec vue sur les Alpes vaudoises."
+    }
+  },
+  {
+    "name": "Maloja Pass",
+    "countries": [
+      "🇨🇭"
+    ],
+    "status": "open",
+    "canton": "GR",
+    "length": 32,
+    "height": 1815,
+    "opens": "Ganzjährig offen",
+    "closes": "–",
+    "description": {
+      "DE": "Verbindet das Engadin mit dem Bergell – ganzjährig geräumt.",
+      "EN": "Connects Engadin with Bergell – cleared all year round.",
+      "IT": "Collega l'Engadina con la Bregaglia – sgomberato tutto l'anno.",
+      "FR": "Relie l'Engadine au Bergell – dégagé toute l'année."
+    }
+  },
+  {
+    "name": "Oberalppass",
+    "countries": [
+      "🇨🇭"
+    ],
+    "status": "closed",
+    "canton": "UR/GR",
+    "length": 33,
+    "height": 2044,
+    "opens": "Mai",
+    "closes": "Oktober",
+    "description": {
+      "DE": "Verbindung zwischen Andermatt und Disentis – mit Leuchtturm auf dem Scheitelpunkt.",
+      "EN": "Connection between Andermatt and Disentis – with lighthouse at the summit.",
+      "IT": "Collegamento tra Andermatt e Disentis – con faro sul punto più alto.",
+      "FR": "Connexion entre Andermatt et Disentis – avec phare au sommet."
+    }
+  }
+]
