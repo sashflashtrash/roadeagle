@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '@/lib/supabaseClient';
@@ -55,8 +54,12 @@ export default function AdminPassEditor() {
   };
 
   const handleSave = async () => {
+    if (!formData.id) {
+      formData.id = crypto.randomUUID();
+    }
+    console.log("👀 Daten die gespeichert werden:", formData);
     if (isNew) {
-      const newData = { ...formData, id: crypto.randomUUID() };
+      const newData = { ...formData };
       const { error } = await supabase.from('passes').insert(newData);
       if (!error) alert('✅ Neu gespeichert');
       else alert('❌ Fehler: ' + error.message);
@@ -69,17 +72,18 @@ export default function AdminPassEditor() {
     if (data) setPasses(data);
   };
 
-  const flattenPass = (parsed) => {
-    return {
-      ...parsed,
-      description_de: parsed.description?.DE || '',
-      description_en: parsed.description?.EN || '',
-      description_it: parsed.description?.IT || '',
-      description_fr: parsed.description?.FR || '',
-      marker_lat: parsed.marker?.[0] || '',
-      marker_lng: parsed.marker?.[1] || '',
-    };
-  };
+  const flattenPass = (parsed) => ({
+    ...parsed,
+    description_de: parsed.description_de ?? parsed.description?.DE ?? '',
+    description_en: parsed.description_en ?? parsed.description?.EN ?? '',
+    description_it: parsed.description_it ?? parsed.description?.IT ?? '',
+    description_fr: parsed.description_fr ?? parsed.description?.FR ?? '',
+    marker_lat: parsed.marker_lat ?? parsed.marker?.[0] ?? null,
+    marker_lng: parsed.marker_lng ?? parsed.marker?.[1] ?? null,
+    circle_center_lat: parsed.circle_center_lat ?? null,
+    circle_center_lng: parsed.circle_center_lng ?? null,
+    circle_radius: parsed.circle_radius ?? null,
+  });
 
   if (!auth) return null;
 
@@ -179,9 +183,7 @@ export default function AdminPassEditor() {
               )}
             </div>
 
-            {[
-              'name','status','canton','countries','opens','closes','length','height','marker_lat','marker_lng','coords','level','spezialbeschreibung','region','datum_open','datum_close','type'
-            ].map((field) => (
+            {[ 'name','status','canton','countries','opens','closes','length','height','marker_lat','marker_lng','coords','level','spezialbeschreibung','region','datum_open','datum_close','type','circle_center_lat','circle_center_lng','circle_radius' ].map((field) => (
               <input
                 key={field}
                 name={field}
@@ -223,7 +225,7 @@ export default function AdminPassEditor() {
                 try {
                   const parsed = JSON.parse(e.target.value);
                   const list = Array.isArray(parsed) ? parsed : [parsed];
-                  const flatted = list.map(flattenPass);
+                  const flatted = list.map(flattenPass).map(p => ({ id: p.id || crypto.randomUUID(), ...p }));
                   setImported(flatted);
                 } catch (err) {
                   alert('❌ JSON ungültig: ' + err.message);
