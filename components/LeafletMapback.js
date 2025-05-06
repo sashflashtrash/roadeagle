@@ -310,7 +310,7 @@ export default function LeafletMapBack({ selectedPassId, selectedPassName }) {
       </div>
 
       <div style={{ position: 'absolute', top: 12, left: 20, zIndex: 1000 }}>
-        <button onClick={() => router.push('/admin')} title="Zurück zur Adminseite" style={{ backgroundColor: '#555', color: '#fff', border: 'none', padding: '6px 12px' }}>🔙 Admin</button>
+        <button onClick={() => router.push('admin254dfE45fg45Fgt55df456FFghbv')} title="Zurück zur Adminseite" style={{ backgroundColor: '#555', color: '#fff', border: 'none', padding: '6px 12px' }}>🔙 Admin</button>
       </div>
     </div>
   );

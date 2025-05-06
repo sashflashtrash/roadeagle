@@ -35,7 +35,7 @@ export default function MapBackPage() {
     if (session === "true" && expiry && Date.now() < parseInt(expiry)) {
       setAuth(true); // Authentifizierung erfolgreich
     } else {
-      router.push("/admin254dfE45fg45Fgt55df456FFghbv"); // Nicht authentifiziert → weiterleiten zur Login-Seite
+      router.push("/admin"); // Nicht authentifiziert → weiterleiten zur Login-Seite
     }
   }, []); // Leeres Array = nur einmal beim ersten Rendern ausführen
 
