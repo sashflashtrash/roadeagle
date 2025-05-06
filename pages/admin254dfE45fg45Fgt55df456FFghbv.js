@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
@@ -101,6 +100,7 @@ export default function admin254dfE45fg45Fgt55df456FFghbv() {
             <div>
               {saveMessage && <span style={{ marginRight: 10, color: saveMessage.startsWith("✅") ? "lightgreen" : "#f66" }}>{saveMessage}</span>}
               <button onClick={handleSaveAll} style={{ padding: "8px 16px", marginRight: 12 }}>💾 Save all</button>
+              <button onClick={() => router.push("/admin/mapback")} style={{ padding: "8px 16px", marginRight: 12 }}>🗺️ Map Editor</button>
               <button onClick={() => router.push("/admin/new")} style={{ padding: "8px 16px" }}>➕ Neuer Eintrag</button>
             </div>
           </div>

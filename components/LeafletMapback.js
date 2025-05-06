@@ -1,10 +1,13 @@
+// Leafletmapback ohne Passliste (erweitert für selectedPassId + Name)
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import { MapContainer, TileLayer, Marker, Polyline, Circle, FeatureGroup, useMap, useMapEvents } from 'react-leaflet';
 import { EditControl } from 'react-leaflet-draw';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import { supabase } from '@/lib/supabaseClient';
+
 function SearchControl() {
   const map = useMap();
   useEffect(() => {
@@ -15,7 +18,6 @@ function SearchControl() {
       div.style.padding = '6px';
       div.innerHTML = '<input id="searchbox" type="text" placeholder="📍 Ort suchen..." style="width: 120px; padding: 2px;" />';
       L.DomEvent.disableClickPropagation(div);
-
       setTimeout(() => {
         const input = document.getElementById('searchbox');
         if (input) {
@@ -36,7 +38,6 @@ function SearchControl() {
           });
         }
       }, 100);
-
       return div;
     };
     searchControl.addTo(map);
@@ -47,12 +48,18 @@ function SearchControl() {
 function RoutePlanner({ onRouteReady }) {
   const map = useMap();
   const [points, setPoints] = useState([]);
-  window.setCoordsFromAlt = onRouteReady;
-  window.lastRoutePoints = points;
+
+  useEffect(() => {
+    window.setCoordsFromAlt = onRouteReady;
+    window.setRoutingPoints = (newPts) => setPoints([...newPts]);
+    window.getRoutingPoints = () => [...points];
+  }, [points, onRouteReady]);
 
   useMapEvents({
     click(e) {
-      setPoints(prev => [...prev, e.latlng]);
+      const current = window.getRoutingPoints?.() || [];
+      const updated = [...current, e.latlng];
+      setPoints(updated);
     }
   });
 
@@ -70,45 +77,22 @@ function RoutePlanner({ onRouteReady }) {
         .catch(() => {
           alert("Routing fehlgeschlagen");
         });
+    } else {
+      onRouteReady([]);
     }
   }, [points]);
 
   return null;
 }
 
-export default function LeafletMapBack() {
-  const [passList, setPassList] = useState([]);
-  const [selectedPassId, setSelectedPassId] = useState(null);
+export default function LeafletMapBack({ selectedPassId, selectedPassName }) {
   const [marker, setMarker] = useState(null);
   const [coords, setCoords] = useState([]);
   const [circle, setCircle] = useState(null);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [autoZoom, setAutoZoom] = useState(true);
   const [routingMode, setRoutingMode] = useState(false);
   const drawRef = useRef();
   const mapRef = useRef();
-
-  useEffect(() => {
-    const fetchNames = async () => {
-      const { data, error } = await supabase.from('passes').select('id, name, type');
-      if (!error) setPassList(data);
-    };
-    fetchNames();
-  }, []);
-
-  const zoomToFeatures = () => {
-    const map = mapRef.current;
-    if (!map || !autoZoom) return;
-    if (marker) {
-      map.setView([marker.lat, marker.lng], 12);
-    } else if (coords.length > 0) {
-      const bounds = L.latLngBounds(coords.map(pt => [pt.lat, pt.lng]));
-      map.fitBounds(bounds);
-    } else if (circle) {
-      map.setView(circle.center, 12);
-    }
-  };
+  const router = useRouter();
 
   const fetchDetails = async (id) => {
     const { data } = await supabase
@@ -116,35 +100,34 @@ export default function LeafletMapBack() {
       .select('marker_lat, marker_lng, coords, circle_center_lat, circle_center_lng, circle_radius')
       .eq('id', id)
       .single();
+
     if (data) {
       const m = data.marker_lat && data.marker_lng ? { lat: data.marker_lat, lng: data.marker_lng } : null;
       const rawCoords = Array.isArray(data.coords) ? data.coords : [];
       const c = rawCoords.map(c => ({ lat: c[0], lng: c[1] }));
-      const ci = data.circle_center_lat && data.circle_center_lng && data.circle_radius ? {
-        center: { lat: data.circle_center_lat, lng: data.circle_center_lng },
-        radius: data.circle_radius
-      } : null;
+      const ci = data.circle_center_lat && data.circle_center_lng && data.circle_radius
+        ? { center: { lat: data.circle_center_lat, lng: data.circle_center_lng }, radius: data.circle_radius }
+        : null;
+
       setMarker(m);
       setCoords(c);
       setCircle(ci);
+
       const group = drawRef.current;
       if (group) {
-  group.clearLayers();
-  if (m) {
-    const markerLayer = L.marker([m.lat, m.lng]);
-    group.addLayer(markerLayer);
-  }
-  if (c.length > 1) {
-    const polyline = L.polyline(c.map(pt => [pt.lat, pt.lng]), { color: 'blue' });
-    group.addLayer(polyline);
-  }
-  if (ci) {
-    const circleLayer = L.circle(ci.center, { radius: ci.radius, color: 'red' });
-    group.addLayer(circleLayer);
-  }
-}
-      if (autoZoom) {
-        setTimeout(() => zoomToFeatures(), 100);
+        group.clearLayers();
+        if (m) group.addLayer(L.marker([m.lat, m.lng]));
+        if (c.length > 1) group.addLayer(L.polyline(c.map(pt => [pt.lat, pt.lng]), { color: 'blue' }));
+        if (ci) group.addLayer(L.circle(ci.center, { radius: ci.radius, color: 'red' }));
+      }
+
+      if (!m && c.length === 0 && !ci && selectedPassName) {
+        const input = document.getElementById('searchbox');
+        if (input) {
+          input.value = selectedPassName;
+          const event = new KeyboardEvent('keydown', { key: 'Enter' });
+          input.dispatchEvent(event);
+        }
       }
     }
   };
@@ -155,36 +138,16 @@ export default function LeafletMapBack() {
 
   const handleCreated = (e) => {
     const layer = e.layer;
-    if (layer instanceof L.Marker) {
-      const { lat, lng } = layer.getLatLng();
-      setMarker({ lat, lng });
-    }
-    if (layer instanceof L.Polyline) {
-      const points = layer.getLatLngs().map(p => ({ lat: p.lat, lng: p.lng }));
-      setCoords(points);
-    }
-    if (layer instanceof L.Circle) {
-      const center = layer.getLatLng();
-      const radius = layer.getRadius();
-      setCircle({ center, radius });
-    }
+    if (layer instanceof L.Marker) setMarker(layer.getLatLng());
+    if (layer instanceof L.Polyline) setCoords(layer.getLatLngs().map(p => ({ lat: p.lat, lng: p.lng })));
+    if (layer instanceof L.Circle) setCircle({ center: layer.getLatLng(), radius: layer.getRadius() });
   };
 
   const handleEdited = (e) => {
     e.layers.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        const { lat, lng } = layer.getLatLng();
-        setMarker({ lat, lng });
-      }
-      if (layer instanceof L.Polyline) {
-        const points = layer.getLatLngs().map(p => ({ lat: p.lat, lng: p.lng }));
-        setCoords(points);
-      }
-      if (layer instanceof L.Circle) {
-        const center = layer.getLatLng();
-        const radius = layer.getRadius();
-        setCircle({ center, radius });
-      }
+      if (layer instanceof L.Marker) setMarker(layer.getLatLng());
+      if (layer instanceof L.Polyline) setCoords(layer.getLatLngs().map(p => ({ lat: p.lat, lng: p.lng })));
+      if (layer instanceof L.Circle) setCircle({ center: layer.getLatLng(), radius: layer.getRadius() });
     });
   };
 
@@ -195,7 +158,6 @@ export default function LeafletMapBack() {
   };
 
   const handleSave = async () => {
-    if (!selectedPassId) return;
     const updates = {
       marker_lat: marker?.lat || null,
       marker_lng: marker?.lng || null,
@@ -204,154 +166,151 @@ export default function LeafletMapBack() {
       circle_center_lng: circle?.center.lng || null,
       circle_radius: circle?.radius || null
     };
-    const { error } = await supabase.from('passes').update(updates).eq('id', selectedPassId);
+    const { error } = await supabase.from('passes').insert([updates]);
     if (!error) alert("✅ Erfolgreich gespeichert.");
     else alert("❌ Fehler beim Speichern: " + error.message);
   };
 
-  const filteredList = passList
-    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()) && (typeFilter === 'all' || p.type === typeFilter))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <div style={{ width: 280, background: '#2c2c2c', padding: 12, color: '#fff', overflowY: 'auto' }}>
-        <h3>Pässe</h3>
-        <input
-          placeholder="🔍 Suche..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ width: '100%', marginBottom: 8 }}
+    <div style={{ height: '100vh', display: 'flex' }}>
+      <MapContainer
+        center={[46.8, 8.3]}
+        zoom={8}
+        style={{ height: '90%', width: 'calc(90% - 60px)' }}
+        whenCreated={(mapInstance) => { mapRef.current = mapInstance; }}
+        zoomControl={false}
+      >
+        <TileLayer
+          attribution='&copy; OpenStreetMap contributors'
+          url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
         />
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          style={{ width: '100%', marginBottom: 12 }}
-        >
-          <option value="all">Alle Typen</option>
-          <option value="pass">Pass</option>
-          <option value="road">Strasse</option>
-          <option value="transit">Transit</option>
-        </select>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {filteredList.map((p) => (
-            <li key={p.id}>
-              <button
-                style={{
-                  width: '100%',
-                  marginBottom: 6,
-                  fontWeight: selectedPassId === p.id ? 'bold' : 'normal',
-                  background: selectedPassId === p.id ? '#4a90e2' : '#3a3a3a',
-                  color: '#fff',
-                  border: 'none',
-                  padding: 6
-                }}
-                onClick={() => {
-  setSelectedPassId(p.id);
-  const input = document.getElementById('searchbox');
-  if (input) {
-    input.value = p.name;
-    const event = new KeyboardEvent('keydown', { key: 'Enter' });
-    input.dispatchEvent(event);
-  }
-}}
-              >
-                {p.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <FeatureGroup ref={drawRef}>
+          <EditControl
+            position="topright"
+            draw={{
+              marker: true,
+              polyline: true,
+              polygon: false,
+              rectangle: false,
+              circle: true,
+              circlemarker: false,
+            }}
+            edit={{ edit: true, remove: true }}
+            onCreated={handleCreated}
+            onEdited={handleEdited}
+            onDeleted={handleDeleted}
+          />
+        </FeatureGroup>
+        <SearchControl />
+        {routingMode && <RoutePlanner onRouteReady={setCoords} />}
+        {marker && <Marker position={[marker.lat, marker.lng]} />}
+        {Array.isArray(coords) && coords.length > 1 && (
+          <Polyline positions={coords.map(c => [c.lat, c.lng])} color="blue" />
+        )}
+        {circle && <Circle center={circle.center} radius={circle.radius} pathOptions={{ color: 'red' }} />}
+        {/* Werkzeuge unterhalb des letzten Draw-Tools */}
+        <div style={{
+  width: '60px',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: 8,
+  backgroundColor: 'rgba(255,255,255,0.95)',
+  padding: '6px 4px',
+  boxShadow: '-2px 0 6px rgba(0,0,0,0.15)',
+  zIndex: 2000
+}}>
+  <button onClick={() => setRoutingMode(!routingMode)} title="Route planen" style={{ backgroundColor: routingMode ? '#d0ebff' : undefined, fontSize: '1.4rem', padding: '6px' }}>🧭</button>
+  <button onClick={() => {
+    const group = drawRef.current;
+    if (!group) return;
+    if (marker) group.addLayer(L.marker([marker.lat, marker.lng]));
+    if (coords.length > 1) group.addLayer(L.polyline(coords.map(c => [c.lat, c.lng]), { color: 'blue' }));
+    if (circle) group.addLayer(L.circle(circle.center, { radius: circle.radius }));
+  }} title="Bearbeiten" style={{ fontSize: '1.4rem', padding: '6px' }}>✏️</button>
+  <button onClick={handleSave} title="Speichern" style={{ backgroundColor: coords.length > 0 ? '#d0ffd6' : undefined, fontSize: '1.4rem', padding: '6px' }}>💾</button>
+  <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (window.getRoutingPoints && window.setRoutingPoints && window.setCoordsFromAlt) {
+              const current = window.getRoutingPoints();
+              const updated = current.slice(0, -1);
+              window.setRoutingPoints(updated);
+              if (updated.length >= 2) {
+                const coordsQuery = updated.map(p => `${p.lng},${p.lat}`).join(';');
+                fetch(`https://router.project-osrm.org/route/v1/driving/${coordsQuery}?overview=full&geometries=geojson`)
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                      const coords = data.routes[0].geometry.coordinates.map(([lng, lat]) => ({ lat, lng }));
+                      window.setCoordsFromAlt(coords);
+                    } else {
+                      window.setCoordsFromAlt([]);
+                    }
+                  })
+                  .catch(() => window.setCoordsFromAlt([]));
+              } else {
+                window.setCoordsFromAlt([]);
+              }
+            }
+          }}
+          title="Letzten Punkt entfernen" style={{ fontSize: '1.4rem', padding: '6px' }}>↩️</button>
+</div>
+</MapContainer>
+
+      {/* Werkzeugleiste rechts neben der Karte */}
+      <div style={{
+        width: '60px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        padding: '6px 4px',
+        boxShadow: '-2px 0 6px rgba(0,0,0,0.15)',
+        zIndex: 2000
+      }}>
+        <button onClick={() => setRoutingMode(!routingMode)} title="Route planen" style={{ backgroundColor: routingMode ? '#d0ebff' : undefined, fontSize: '1.4rem', padding: '6px' }}>🧭</button>
+        <button onClick={() => {
+          const group = drawRef.current;
+          if (!group) return;
+          if (marker) group.addLayer(L.marker([marker.lat, marker.lng]));
+          if (coords.length > 1) group.addLayer(L.polyline(coords.map(c => [c.lat, c.lng]), { color: 'blue' }));
+          if (circle) group.addLayer(L.circle(circle.center, { radius: circle.radius }));
+        }} title="Bearbeiten" style={{ fontSize: '1.4rem', padding: '6px' }}>✏️</button>
+        <button onClick={handleSave} title="Speichern" style={{ backgroundColor: coords.length > 0 ? '#d0ffd6' : undefined, fontSize: '1.4rem', padding: '6px' }}>💾</button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (window.getRoutingPoints && window.setRoutingPoints && window.setCoordsFromAlt) {
+              const current = window.getRoutingPoints();
+              const updated = current.slice(0, -1);
+              window.setRoutingPoints(updated);
+              if (updated.length >= 2) {
+                const coordsQuery = updated.map(p => `${p.lng},${p.lat}`).join(';');
+                fetch(`https://router.project-osrm.org/route/v1/driving/${coordsQuery}?overview=full&geometries=geojson`)
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data.routes && data.routes.length > 0) {
+                      const coords = data.routes[0].geometry.coordinates.map(([lng, lat]) => ({ lat, lng }));
+                      window.setCoordsFromAlt(coords);
+                    } else {
+                      window.setCoordsFromAlt([]);
+                    }
+                  })
+                  .catch(() => window.setCoordsFromAlt([]));
+              } else {
+                window.setCoordsFromAlt([]);
+              }
+            }
+          }}
+          title="Letzten Punkt entfernen" style={{ fontSize: '1.4rem', padding: '6px' }}>↩️</button>
       </div>
 
-      <div style={{ flex: 1, position: 'relative' }}>
-        <MapContainer
-          center={[46.8, 8.3]}
-          zoom={8}
-          style={{ height: '100%', width: '100%' }}
-          whenCreated={(mapInstance) => { mapRef.current = mapInstance; }}
-        >
-          <TileLayer
-            attribution='&copy; OpenStreetMap contributors'
-            url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-          />
-          <FeatureGroup ref={drawRef}>
-            <EditControl
-              position="topright"
-              draw={{
-                marker: true,
-                polyline: true,
-                polygon: false,
-                rectangle: false,
-                circle: true,
-                circlemarker: false,
-              }}
-              edit={{ edit: true, remove: true }}
-              onCreated={handleCreated}
-              onEdited={handleEdited}
-              onDeleted={handleDeleted}
-            />
-          </FeatureGroup>
-          <SearchControl />
-          {routingMode && <RoutePlanner onRouteReady={setCoords} />}
-          {marker && <Marker position={[marker.lat, marker.lng]} />}
-          {Array.isArray(coords) && coords.length > 1 && (
-            <Polyline positions={coords.map(c => [c.lat, c.lng])} color="blue" />
-          )}
-          {circle && <Circle center={circle.center} radius={circle.radius} pathOptions={{ color: 'red' }} />}
-        </MapContainer>
-
-        {true && (
-          <div style={{ position: 'absolute', top: '50%', right: 10, zIndex: 1000, transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <button
-              onClick={() => setAutoZoom(prev => !prev)}
-              title="Auto-Zoom"
-              style={{ backgroundColor: autoZoom ? '#4caf50' : '#888', color: '#fff', border: 'none', padding: '6px 12px' }}
-            >
-              {autoZoom ? '🔍 Auto-Zoom: AN' : '🔍 Auto-Zoom: AUS'}
-            </button>
-            <button onClick={() => setRoutingMode(!routingMode)} title="Route planen">
-              🧭 Route {routingMode ? 'beenden' : 'planen'}
-            </button>
-            <button
-              onClick={() => {
-                const group = drawRef.current;
-                if (!group) return;
-                if (marker) {
-                  const existingMarker = L.marker([marker.lat, marker.lng]);
-                  group.addLayer(existingMarker);
-                }
-                if (coords.length > 1) {
-                  const polyline = L.polyline(coords.map(c => [c.lat, c.lng]), { color: 'blue' });
-                  group.addLayer(polyline);
-                }
-                if (circle) {
-                  const leafletCircle = L.circle(circle.center, { radius: circle.radius });
-                  group.addLayer(leafletCircle);
-                }
-              }}
-              title="Bearbeiten"
-            >
-              ✏️ Bearbeiten
-            </button>
-            <button
-  onClick={handleSave}
-  title="Speichern"
-  style={{ backgroundColor: '#4a90e2', color: '#fff', border: 'none', padding: '6px 12px' }}
->
-  💾 Speichern
-</button>
-<button
-  onClick={() => {
-    setCoords(prev => prev.slice(0, -1));
-  }}
-  title="Letzten Punkt entfernen"
-  style={{ backgroundColor: '#e67e22', color: '#fff', border: 'none', padding: '6px 12px' }}
->
-  ↩️ Letzten Punkt entfernen
-</button>
-            
-          </div>
-        )}
+      <div style={{ position: 'absolute', top: 12, left: 20, zIndex: 1000 }}>
+        <button onClick={() => router.push('/admin')} title="Zurück zur Adminseite" style={{ backgroundColor: '#555', color: '#fff', border: 'none', padding: '6px 12px' }}>🔙 Admin</button>
       </div>
     </div>
   );
