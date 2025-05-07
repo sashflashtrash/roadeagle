@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { useAppContext } from "../contexts/AppContext";
 import Roads from "../components/roads";
-import SidebarMap from "../components/sidebarmap";
-import SidebarMapMobile from "../components/sidebarmapmobile";
+import SidebarMap from "../components/Sidebarmap";
+import SidebarMapMobile from "../components/Sidebarmapmobile";
 
 const LeafletMap = dynamic(() => import("../components/LeafletMap"), {
   ssr: false,
@@ -150,7 +150,7 @@ export default function MapPage() {
 
       {/* Sidebar */}
       {isMobile ? (
-        <sidebarmapmobile
+        <Sidebarmapmobile
           darkMode={darkMode}
           language={language}
           sidebarOpen={sidebarOpen}
@@ -165,7 +165,7 @@ export default function MapPage() {
           toggleFavorite={toggleFavorite}
         />
       ) : (
-        <sidebarmap
+        <Sidebarmap
           darkMode={darkMode}
           language={language}
           sidebarOpen={sidebarOpen}
