@@ -150,7 +150,7 @@ export default function MapPage() {
 
       {/* Sidebar */}
       {isMobile ? (
-        <SidebarMapMobile
+        <sidebarmapmobile
           darkMode={darkMode}
           language={language}
           sidebarOpen={sidebarOpen}
@@ -165,7 +165,7 @@ export default function MapPage() {
           toggleFavorite={toggleFavorite}
         />
       ) : (
-        <SidebarMap
+        <sidebarmap
           darkMode={darkMode}
           language={language}
           sidebarOpen={sidebarOpen}
