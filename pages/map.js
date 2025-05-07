@@ -21,14 +21,27 @@ export default function MapPage() {
   const [isMobile, setIsMobile] = useState(false);
 
   const {
-    filteredPasses,
-    favorites,
-    toggleFavorite,
-    searchTerm,
-    setSearchTerm,
-    legendFilters,
-    toggleLegendFilter,
-  } = useRoads();
+  filteredPasses,
+  favorites,
+  toggleFavorite,
+  search,
+  setSearch,
+  showOnlyFavorites,
+  setShowOnlyFavorites,
+  typeFilter,
+  setTypeFilter,
+  levelFilter,
+  setLevelFilter,
+  countryFilter,
+  setCountryFilter,
+  cantonFilter,
+  setCantonFilter,
+  regionFilter,
+  setRegionFilter,
+  statusFilter,
+  setStatusFilter
+} = useRoads();
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -128,7 +141,7 @@ export default function MapPage() {
         {legendKeys.map((key) => (
           <div key={key}>
             <button
-              onClick={() => toggleLegendFilter(key)}
+              onClick={() => setStatusFilter(key)}
               style={{
                 backgroundColor: 'transparent',
                 border: '1px solid #ccc',
@@ -142,7 +155,7 @@ export default function MapPage() {
                 textAlign: 'left'
               }}
             >
-              <span style={{ color: legendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText[language][key]}
+              <span style={{ color: statusFilter === key ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText[language][key]}
             </button>
           </div>
         ))}
@@ -155,8 +168,8 @@ export default function MapPage() {
           language={language}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          search={search}
+          setSearch={setSearch}
           legendText={legendText}
           filteredPasses={filteredPasses}
           selectedPass={selectedPass}
@@ -170,8 +183,8 @@ export default function MapPage() {
           language={language}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          search={search}
+          setSearch={setSearch}
           legendText={legendText}
           filteredPasses={filteredPasses}
           selectedPass={selectedPass}
