@@ -5,8 +5,8 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { useAppContext } from "../contexts/AppContext";
 import Roads from "../components/roads";
-import SidebarMap from "../components/SidebarMap";
-import SidebarMapMobile from "../components/SidebarMapMobile";
+import SidebarMap from "../components/sidebarmap";
+import SidebarMapMobile from "../components/sidebarmapmobile";
 
 const LeafletMap = dynamic(() => import("../components/LeafletMap"), {
   ssr: false,
