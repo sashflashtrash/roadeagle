@@ -61,7 +61,7 @@ export default function SidebarMapMobile({
           zIndex: 1101,
         }}
       >
-        {legendText[language].list}
+        {(legendText?.[language] || legendText?.["DE"])?.list}
       </div>
 
       {/* Bottom Sheet */}
@@ -87,7 +87,7 @@ export default function SidebarMapMobile({
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder={legendText[language].search}
+          placeholder={(legendText?.[language] || legendText?.["DE"])?.search}
           style={{
             padding: 6,
             borderRadius: 4,
