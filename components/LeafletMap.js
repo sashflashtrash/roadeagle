@@ -1,15 +1,8 @@
 // LeafletMap.js
-import L from "leaflet";
+import { useEffect, useMemo } from "react";
 
-const customIcon = L.icon({
-  iconUrl: "/pin.png",
-  iconSize: [30, 45],
-  iconAnchor: [15, 45],
-  popupAnchor: [0, -40],
-});
 import { MapContainer, TileLayer, Marker, Tooltip, Polyline, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { useEffect } from "react";
 
 function ZoomToPass({ selectedPass, autoZoom, centerOffset, setSelectPass }) {
   const map = useMap();
@@ -26,6 +19,16 @@ function ZoomToPass({ selectedPass, autoZoom, centerOffset, setSelectPass }) {
 }
 
 export default function LeafletMap({ passes, selectedPass, autoZoom, centerOffset, setSelectedPass }) {
+  const customIcon = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const L = require("leaflet");
+    return L.icon({
+      iconUrl: "/pin.png",
+      iconSize: [30, 45],
+      iconAnchor: [15, 45],
+      popupAnchor: [0, -40],
+    });
+  }, []);
   return (
     <MapContainer
       center={[47.0, 8.0]}
@@ -39,7 +42,7 @@ export default function LeafletMap({ passes, selectedPass, autoZoom, centerOffse
         attribution="&copy; OpenStreetMap contributors"
       />
 
-      {selectedPass && selectedPass.marker_lat && selectedPass.marker_lng && (
+      {selectedPass && selectedPass.marker_lat && selectedPass.marker_lng && customIcon && (
         <Marker key={selectedPass.id} position={[selectedPass.marker_lat, selectedPass.marker_lng]} icon={customIcon}>
           <Tooltip direction="top" offset={[0, -10]} permanent>{selectedPass.name}</Tooltip>
         </Marker>
@@ -75,4 +78,5 @@ export default function LeafletMap({ passes, selectedPass, autoZoom, centerOffse
     </MapContainer>
   );
 }
+
 

@@ -132,7 +132,7 @@ export default function SidebarMap({
           }}
         >
           <ul style={{ listStyle: "none", padding: 0, direction: "ltr", margin: 0 }}>
-            {filteredPasses.sort((a, b) => a.name.localeCompare(b.name)).map((pass) => (
+            {(filteredPasses || []).sort((a, b) => a.name.localeCompare(b.name)).map((pass) => (
               <li
                 key={pass.id || pass.name}
                 className={selectedPass?.name === pass.name ? "selected" : ""}

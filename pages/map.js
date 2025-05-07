@@ -15,8 +15,7 @@ const LeafletMap = dynamic(() => import("../components/LeafletMap"), {
 export default function MapPage() {
   const router = useRouter();
   const { language, darkMode } = useAppContext();
-  const activeLegend = legendText[language] || legendText["DE"];
-  const [selectedPass, setSelectedPass] = useState(null);
+    const [selectedPass, setSelectedPass] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoZoom, setAutoZoom] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -30,6 +29,8 @@ export default function MapPage() {
     legendFilters,
     toggleLegendFilter,
   } = Roads();
+
+  const safeLegendFilters = legendFilters || {};
 
   useEffect(() => {
     const handleResize = () => {
@@ -52,67 +53,70 @@ export default function MapPage() {
   };
 
   const legendText = {
-    DE: {
-      closed: "Pass zu",
-      open: "Pass auf",
-      low: "Strassen",
-      transit: "Autobahn",
-      scenic: "Aussicht",
-      autoZoom: "Auto-Zoom",
-      allStatus: "Alle Status",
-      allCountries: "Alle Länder",
-      allRegions: "Alle Regionen",
-      allTypes: "Alle Typen",
-      favOnly: "Nur Favoriten",
-      search: "Suchen...",
-      list: "Liste",
-    },
-    EN: {
-      closed: "Pass closed",
-      open: "Pass open",
-      low: "Flat road",
-      transit: "Highway",
-      scenic: "Scenic",
-      autoZoom: "Auto-Zoom",
-      allStatus: "All Status",
-      allCountries: "All Countries",
-      allRegions: "All Regions",
-      allTypes: "All Types",
-      favOnly: "Favorites only",
-      search: "Search...",
-      list: "List",
-    },
-    FR: {
-      closed: "Col fermé",
-      open: "Col ouvert",
-      low: "Rue",
-      transit: "Autoroute",
-      scenic: "Panoramique",
-      autoZoom: "Zoom auto",
-      allStatus: "Tous les statuts",
-      allCountries: "Tous les pays",
-      allRegions: "Toutes les régions",
-      allTypes: "Tous les types",
-      favOnly: "Favoris seulement",
-      search: "Rechercher...",
-      list: "Liste",
-    },
-    IT: {
-      closed: "Passo chiuso",
-      open: "Passo aperto",
-      low: "Strada",
-      transit: "Autostrada",
-      scenic: "Panoramico",
-      autoZoom: "Zoom automatico",
-      allStatus: "Tutti gli stati",
-      allCountries: "Tutti i paesi",
-      allRegions: "Tutte le regioni",
-      allTypes: "Tutti i tipi",
-      favOnly: "Solo preferiti",
-      search: "Cerca...",
-      list: "Lista",
-    },
-  };
+  DE: {
+    closed: "Pass zu",
+    open: "Pass auf",
+    low: "Strassen",
+    transit: "Autobahn",
+    scenic: "Aussicht",
+    autoZoom: "Auto-Zoom",
+    allStatus: "Alle Status",
+    allCountries: "Alle Länder",
+    allRegions: "Alle Regionen",
+    allTypes: "Alle Typen",
+    favOnly: "Nur Favoriten",
+    search: "Suchen...",
+    list: "Liste",
+  },
+  EN: {
+    closed: "Pass closed",
+    open: "Pass open",
+    low: "Flat road",
+    transit: "Highway",
+    scenic: "Scenic",
+    autoZoom: "Auto-Zoom",
+    allStatus: "All Status",
+    allCountries: "All Countries",
+    allRegions: "All Regions",
+    allTypes: "All Types",
+    favOnly: "Favorites only",
+    search: "Search...",
+    list: "List",
+  },
+  FR: {
+    closed: "Col fermé",
+    open: "Col ouvert",
+    low: "Rue",
+    transit: "Autoroute",
+    scenic: "Panoramique",
+    autoZoom: "Zoom auto",
+    allStatus: "Tous les statuts",
+    allCountries: "Tous les pays",
+    allRegions: "Toutes les régions",
+    allTypes: "Tous les types",
+    favOnly: "Favoris seulement",
+    search: "Rechercher...",
+    list: "Liste",
+  },
+  IT: {
+    closed: "Passo chiuso",
+    open: "Passo aperto",
+    low: "Strada",
+    transit: "Autostrada",
+    scenic: "Panoramico",
+    autoZoom: "Zoom automatico",
+    allStatus: "Tutti gli stati",
+    allCountries: "Tutti i paesi",
+    allRegions: "Tutte le regioni",
+    allTypes: "Tutti i tipi",
+    favOnly: "Solo preferiti",
+    search: "Cerca...",
+    list: "Lista",
+  },
+};
+
+  const safeLang = ["DE", "EN", "FR", "IT"].includes(language) ? language : "DE";
+  const activeLegend = legendText[safeLang] || {};
 
   return (
     <div style={{ fontFamily: "Arial, sans-serif", height: "100vh", overflow: "hidden", position: "relative" }}>
@@ -143,7 +147,7 @@ export default function MapPage() {
                 textAlign: 'left'
               }}
             >
-              <span style={{ color: legendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {activeLegend[key]}
+              <span style={{ color: safeLegendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {activeLegend[key] ?? key}
             </button>
           </div>
         ))}
