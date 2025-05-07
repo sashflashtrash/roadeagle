@@ -1,102 +1,195 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+// /pages/map.js
+import dynamic from "next/dynamic";
+import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
+import Navbar from "../components/Navbar";
+import { useAppContext } from "../contexts/AppContext";
+import useRoads from "../components/roads";
+import SidebarMap from "../components/SidebarMap";
+import SidebarMapMobile from "../components/SidebarMapMobile";
 
-export default function Roads() {
-  const [passes, setPasses] = useState([]);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [favorites, setFavorites] = useState([]);
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+const LeafletMap = dynamic(() => import("../components/LeafletMap"), {
+  ssr: false,
+});
+
+export default function MapPage() {
+  const router = useRouter();
+  const { language, darkMode } = useAppContext();
+  const [selectedPass, setSelectedPass] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [autoZoom, setAutoZoom] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  const {
+    filteredPasses,
+    favorites,
+    toggleFavorite,
+    searchTerm,
+    setSearchTerm,
+    legendFilters,
+    toggleLegendFilter,
+  } = useRoads();
 
   useEffect(() => {
-    const saved = localStorage.getItem('beyond_favorites');
-    if (saved) setFavorites(JSON.parse(saved));
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('beyond_favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { data, error } = await supabase.from('passes').select('*').eq('hidden', false);
-      if (data) setPasses(data);
-      if (error) console.error('Supabase error:', error);
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setSidebarOpen(!mobile); // ← Sidebar-Status abhängig vom Gerät
     };
-    fetchData();
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const toggleFavorite = (id) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-    );
+  const legendKeys = ["closed", "open", "low", "transit", "scenic"];
+  const legendColors = {
+    closed: "red",
+    open: "green",
+    low: "blue",
+    transit: "gold",
+    scenic: "orange",
   };
 
-  const filtered = passes.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || p.status === statusFilter;
-    const isFavorite = favorites.includes(p.id);
-    return (
-      matchesSearch &&
-      matchesStatus &&
-      (!showOnlyFavorites || isFavorite)
-    );
-  });
+  const legendText = {
+    DE: {
+      closed: "Pass zu",
+      open: "Pass auf",
+      low: "Strassen",
+      transit: "Autobahn",
+      scenic: "Aussicht",
+      autoZoom: "Auto-Zoom",
+      allStatus: "Alle Status",
+      allCountries: "Alle Länder",
+      allRegions: "Alle Regionen",
+      allTypes: "Alle Typen",
+      favOnly: "Nur Favoriten",
+      search: "Suchen...",
+      list: "Liste",
+    },
+    EN: {
+      closed: "Pass closed",
+      open: "Pass open",
+      low: "Flat road",
+      transit: "Highway",
+      scenic: "Scenic",
+      autoZoom: "Auto-Zoom",
+      allStatus: "All Status",
+      allCountries: "All Countries",
+      allRegions: "All Regions",
+      allTypes: "All Types",
+      favOnly: "Favorites only",
+      search: "Search...",
+      list: "List",
+    },
+    FR: {
+      closed: "Col fermé",
+      open: "Col ouvert",
+      low: "Rue",
+      transit: "Autoroute",
+      scenic: "Panoramique",
+      autoZoom: "Zoom auto",
+      allStatus: "Tous les statuts",
+      allCountries: "Tous les pays",
+      allRegions: "Toutes les régions",
+      allTypes: "Tous les types",
+      favOnly: "Favoris seulement",
+      search: "Rechercher...",
+      list: "Liste",
+    },
+    IT: {
+      closed: "Passo chiuso",
+      open: "Passo aperto",
+      low: "Strada",
+      transit: "Autostrada",
+      scenic: "Panoramico",
+      autoZoom: "Zoom automatico",
+      allStatus: "Tutti gli stati",
+      allCountries: "Tutti i paesi",
+      allRegions: "Tutte le regioni",
+      allTypes: "Tutti i tipi",
+      favOnly: "Solo preferiti",
+      search: "Cerca...",
+      list: "Lista",
+    },
+  };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🚗 Swiss Passes</h1>
+    <div style={{ fontFamily: "Arial, sans-serif", height: "100vh", overflow: "hidden", position: "relative" }}>
+      <Navbar />
 
-      <div style={{ marginBottom: 20, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          placeholder="🔍 Search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="all">All</option>
-          <option value="open">Open</option>
-          <option value="closed">Closed</option>
-          <option value="unknown">Unknown</option>
-        </select>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={showOnlyFavorites}
-            onChange={() => setShowOnlyFavorites(!showOnlyFavorites)}
-          />
-          &nbsp;Only favorites
-        </label>
+      {/* Legende */}
+      <div style={{ position: "fixed", top: "70px", right: "20px", backgroundColor: darkMode ? "#333" : "rgba(255,255,255,0.9)", color: darkMode ? "#eee" : "#000", padding: "10px 14px", borderRadius: "8px", fontSize: "14px", lineHeight: "1.5", boxShadow: "0 2px 6px rgba(0,0,0,0.15)", zIndex: 1100 }}>
+        <button
+          onClick={() => setAutoZoom(!autoZoom)}
+          style={{ marginBottom: "8px", padding: "4px 8px", borderRadius: "4px", backgroundColor: autoZoom ? "#0070f3" : "#aaa", color: "white", border: "none", cursor: "pointer", fontSize: "13px" }}
+        >
+          {legendText[language].autoZoom}: {autoZoom ? "On" : "Off"}
+        </button>
+        {legendKeys.map((key) => (
+          <div key={key}>
+            <button
+              onClick={() => toggleLegendFilter(key)}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                padding: '4px 8px',
+                marginBottom: '6px',
+                cursor: 'pointer',
+                color: darkMode ? '#fff' : '#000',
+                fontWeight: 'normal',
+                width: '100%',
+                textAlign: 'left'
+              }}
+            >
+              <span style={{ color: legendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText[language][key]}
+            </button>
+          </div>
+        ))}
       </div>
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {filtered.map((pass) => (
-          <li
-            key={pass.id}
-            style={{
-              border: '1px solid #ccc',
-              borderRadius: 8,
-              padding: 10,
-              marginBottom: 10,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}
-          >
-            <span>{pass.name}</span>
-            <span
-              style={{ cursor: 'pointer' }}
-              onClick={() => toggleFavorite(pass.id)}
-            >
-              {favorites.includes(pass.id) ? '⭐' : '☆'}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {/* Sidebar */}
+      {isMobile ? (
+        <SidebarMapMobile
+          darkMode={darkMode}
+          language={language}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          legendText={legendText}
+          filteredPasses={filteredPasses}
+          selectedPass={selectedPass}
+          setSelectedPass={setSelectedPass}
+          favorites={favorites}
+          toggleFavorite={toggleFavorite}
+        />
+      ) : (
+        <SidebarMap
+          darkMode={darkMode}
+          language={language}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          legendText={legendText}
+          filteredPasses={filteredPasses}
+          selectedPass={selectedPass}
+          setSelectedPass={setSelectedPass}
+          favorites={favorites}
+          toggleFavorite={toggleFavorite}
+        />
+      )}
+
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
+        <LeafletMap
+          passes={filteredPasses}
+          selectedPass={selectedPass}
+          autoZoom={autoZoom}
+          centerOffset={{ x: -0.1 , y: 0.05 }}
+          setSelectedPass={setSelectedPass}
+        />
+      </div>
     </div>
   );
-} 
+}
