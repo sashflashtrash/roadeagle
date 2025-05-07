@@ -6,6 +6,11 @@ export default function useRoads() {
   const [passes, setPasses] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState([]);
+  const [levelFilter, setLevelFilter] = useState([]);
+  const [countryFilter, setCountryFilter] = useState([]);
+  const [cantonFilter, setCantonFilter] = useState([]);
+  const [regionFilter, setRegionFilter] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
@@ -34,11 +39,21 @@ export default function useRoads() {
   };
 
   const filtered = passes.filter((p) => {
+    if (p.hidden) return false;
+
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || p.status === statusFilter;
-    const isFavorite = favorites.includes(p.id);
-    return {
+    const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
+    const matchesType = typeFilter.length === 0 || typeFilter.includes(p.type);
+    const matchesLevel = levelFilter.length === 0 || levelFilter.includes(p.level);
+    const matchesCountry = countryFilter.length === 0 || countryFilter.includes(p.country);
+    const matchesCanton = cantonFilter.length === 0 || cantonFilter.includes(p.canton);
+    const matchesRegion = regionFilter.length === 0 || regionFilter.includes(p.region);
+    const matchesFavorite = !showOnlyFavorites || favorites.includes(p.id);
+
+    return matchesSearch && matchesStatus && matchesType && matchesLevel && matchesCountry && matchesCanton && matchesRegion && matchesFavorite;
+  });
+
+  return {
     filteredPasses: filtered,
     favorites,
     toggleFavorite,
@@ -47,63 +62,19 @@ export default function useRoads() {
     statusFilter,
     setStatusFilter,
     showOnlyFavorites,
-    setShowOnlyFavorites
+    setShowOnlyFavorites,
+    typeFilter,
+    setTypeFilter,
+    levelFilter,
+    setLevelFilter,
+    countryFilter,
+    setCountryFilter,
+    cantonFilter,
+    setCantonFilter,
+    regionFilter,
+    setRegionFilter
   };
-  });
 
-  return (
-    <div style={{ padding: 20 }}>
-      <h1>🚗 Swiss Passes</h1>
 
-      <div style={{ marginBottom: 20, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          placeholder="🔍 Search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="all">All</option>
-          <option value="open">Open</option>
-          <option value="closed">Closed</option>
-          <option value="unknown">Unknown</option>
-        </select>
-
-        <label>
-          <input
-            type="checkbox"
-            checked={showOnlyFavorites}
-            onChange={() => setShowOnlyFavorites(!showOnlyFavorites)}
-          />
-          &nbsp;Only favorites
-        </label>
-      </div>
-
-      <ul style={{ listStyle: 'none', padding: 0 }}>
-        {filtered.map((pass) => (
-          <li
-            key={pass.id}
-            style={{
-              border: '1px solid #ccc',
-              borderRadius: 8,
-              padding: 10,
-              marginBottom: 10,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}
-          >
-            <span>{pass.name}</span>
-            <span
-              style={{ cursor: 'pointer' }}
-              onClick={() => toggleFavorite(pass.id)}
-            >
-              {favorites.includes(pass.id) ? '⭐' : '☆'}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+  
 } 
