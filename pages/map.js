@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { useAppContext } from "../contexts/AppContext";
-import Roads from "../components/roads";
+import useRoads from "../components/roads";
 import SidebarMap from "../components/SidebarMap";
 import SidebarMapMobile from "../components/SidebarMapMobile";
 
@@ -15,7 +15,7 @@ const LeafletMap = dynamic(() => import("../components/LeafletMap"), {
 export default function MapPage() {
   const router = useRouter();
   const { language, darkMode } = useAppContext();
-    const [selectedPass, setSelectedPass] = useState(null);
+  const [selectedPass, setSelectedPass] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoZoom, setAutoZoom] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -28,9 +28,7 @@ export default function MapPage() {
     setSearchTerm,
     legendFilters,
     toggleLegendFilter,
-  } = Roads();
-
-  const safeLegendFilters = legendFilters || {};
+  } = useRoads();
 
   useEffect(() => {
     const handleResize = () => {
@@ -53,70 +51,67 @@ export default function MapPage() {
   };
 
   const legendText = {
-  DE: {
-    closed: "Pass zu",
-    open: "Pass auf",
-    low: "Strassen",
-    transit: "Autobahn",
-    scenic: "Aussicht",
-    autoZoom: "Auto-Zoom",
-    allStatus: "Alle Status",
-    allCountries: "Alle Länder",
-    allRegions: "Alle Regionen",
-    allTypes: "Alle Typen",
-    favOnly: "Nur Favoriten",
-    search: "Suchen...",
-    list: "Liste",
-  },
-  EN: {
-    closed: "Pass closed",
-    open: "Pass open",
-    low: "Flat road",
-    transit: "Highway",
-    scenic: "Scenic",
-    autoZoom: "Auto-Zoom",
-    allStatus: "All Status",
-    allCountries: "All Countries",
-    allRegions: "All Regions",
-    allTypes: "All Types",
-    favOnly: "Favorites only",
-    search: "Search...",
-    list: "List",
-  },
-  FR: {
-    closed: "Col fermé",
-    open: "Col ouvert",
-    low: "Rue",
-    transit: "Autoroute",
-    scenic: "Panoramique",
-    autoZoom: "Zoom auto",
-    allStatus: "Tous les statuts",
-    allCountries: "Tous les pays",
-    allRegions: "Toutes les régions",
-    allTypes: "Tous les types",
-    favOnly: "Favoris seulement",
-    search: "Rechercher...",
-    list: "Liste",
-  },
-  IT: {
-    closed: "Passo chiuso",
-    open: "Passo aperto",
-    low: "Strada",
-    transit: "Autostrada",
-    scenic: "Panoramico",
-    autoZoom: "Zoom automatico",
-    allStatus: "Tutti gli stati",
-    allCountries: "Tutti i paesi",
-    allRegions: "Tutte le regioni",
-    allTypes: "Tutti i tipi",
-    favOnly: "Solo preferiti",
-    search: "Cerca...",
-    list: "Lista",
-  },
-};
-
-  const safeLang = ["DE", "EN", "FR", "IT"].includes(language) ? language : "DE";
-  const activeLegend = legendText[safeLang] || {};
+    DE: {
+      closed: "Pass zu",
+      open: "Pass auf",
+      low: "Strassen",
+      transit: "Autobahn",
+      scenic: "Aussicht",
+      autoZoom: "Auto-Zoom",
+      allStatus: "Alle Status",
+      allCountries: "Alle Länder",
+      allRegions: "Alle Regionen",
+      allTypes: "Alle Typen",
+      favOnly: "Nur Favoriten",
+      search: "Suchen...",
+      list: "Liste",
+    },
+    EN: {
+      closed: "Pass closed",
+      open: "Pass open",
+      low: "Flat road",
+      transit: "Highway",
+      scenic: "Scenic",
+      autoZoom: "Auto-Zoom",
+      allStatus: "All Status",
+      allCountries: "All Countries",
+      allRegions: "All Regions",
+      allTypes: "All Types",
+      favOnly: "Favorites only",
+      search: "Search...",
+      list: "List",
+    },
+    FR: {
+      closed: "Col fermé",
+      open: "Col ouvert",
+      low: "Rue",
+      transit: "Autoroute",
+      scenic: "Panoramique",
+      autoZoom: "Zoom auto",
+      allStatus: "Tous les statuts",
+      allCountries: "Tous les pays",
+      allRegions: "Toutes les régions",
+      allTypes: "Tous les types",
+      favOnly: "Favoris seulement",
+      search: "Rechercher...",
+      list: "Liste",
+    },
+    IT: {
+      closed: "Passo chiuso",
+      open: "Passo aperto",
+      low: "Strada",
+      transit: "Autostrada",
+      scenic: "Panoramico",
+      autoZoom: "Zoom automatico",
+      allStatus: "Tutti gli stati",
+      allCountries: "Tutti i paesi",
+      allRegions: "Tutte le regioni",
+      allTypes: "Tutti i tipi",
+      favOnly: "Solo preferiti",
+      search: "Cerca...",
+      list: "Lista",
+    },
+  };
 
   return (
     <div style={{ fontFamily: "Arial, sans-serif", height: "100vh", overflow: "hidden", position: "relative" }}>
@@ -128,7 +123,7 @@ export default function MapPage() {
           onClick={() => setAutoZoom(!autoZoom)}
           style={{ marginBottom: "8px", padding: "4px 8px", borderRadius: "4px", backgroundColor: autoZoom ? "#0070f3" : "#aaa", color: "white", border: "none", cursor: "pointer", fontSize: "13px" }}
         >
-          {activeLegend.autoZoom}: {autoZoom ? "On" : "Off"}
+          {legendText[language].autoZoom}: {autoZoom ? "On" : "Off"}
         </button>
         {legendKeys.map((key) => (
           <div key={key}>
@@ -147,7 +142,7 @@ export default function MapPage() {
                 textAlign: 'left'
               }}
             >
-              <span style={{ color: safeLegendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {activeLegend[key] ?? key}
+              <span style={{ color: legendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText[language][key]}
             </button>
           </div>
         ))}
