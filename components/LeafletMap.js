@@ -66,7 +66,7 @@ export default function LeafletMap({ passes, selectedPass, autoZoom, centerOffse
             eventHandlers={{
               click: () => {
                 console.log("Polyline clicked:", pass.name);
-                const found = passes.find(p => p.id === pass.id || p.name === pass.name);
+                const found = (passes || []).find(p => p.id === pass.id || p.name === pass.name);
                 if (found && setSelectedPass) setSelectedPass(found);
               }
             }}
