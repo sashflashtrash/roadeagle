@@ -24,8 +24,12 @@ export default function SidebarMapMobile({
 
   useEffect(() => {
     let startY = 0;
-    const onStart = (e) => { startY = e.touches[0].clientY; };
+    const onStart = (e) => {
+      if (!e.touches || e.touches.length === 0) return;
+      startY = e.touches[0].clientY;
+    };
     const onMove = (e) => {
+      if (!e.touches || e.touches.length === 0) return;
       const deltaY = startY - e.touches[0].clientY;
       if (deltaY > 70 && !sidebarOpen) setSidebarOpen(true);
       if (deltaY < -70 && sidebarOpen) setSidebarOpen(false);
@@ -95,7 +99,7 @@ export default function SidebarMapMobile({
         />
         <div className="scrollList" style={{ overflowY: "auto", flexGrow: 1 }} ref={listRef}>
           <ul style={{ listStyle: "none", padding: 0 }}>
-            {filteredPasses.sort((a, b) => a.name.localeCompare(b.name)).map((pass) => (
+            {(filteredPasses || []).sort((a, b) => a.name.localeCompare(b.name)).map((pass) => (
               <li
                 key={pass.id || pass.name}
                 className={selectedPass?.name === pass.name ? "selected" : ""}
@@ -138,3 +142,4 @@ export default function SidebarMapMobile({
     </>
   );
 }
+
