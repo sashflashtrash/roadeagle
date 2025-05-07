@@ -48,7 +48,7 @@ export default function LeafletMap({ passes, selectedPass, autoZoom, centerOffse
         </Marker>
       )}
 
-      {passes.map((pass) => (
+      {(passes || []).map((pass) => (
         pass.coords && pass.coords.length > 1 && (
           <Polyline
             key={pass.id + "_line"}
