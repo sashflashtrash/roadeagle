@@ -15,6 +15,7 @@ const LeafletMap = dynamic(() => import("../components/LeafletMap"), {
 export default function MapPage() {
   const router = useRouter();
   const { language, darkMode } = useAppContext();
+  const activeLegend = legendText[language] || legendText["DE"];
   const [selectedPass, setSelectedPass] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [autoZoom, setAutoZoom] = useState(true);
@@ -123,7 +124,7 @@ export default function MapPage() {
           onClick={() => setAutoZoom(!autoZoom)}
           style={{ marginBottom: "8px", padding: "4px 8px", borderRadius: "4px", backgroundColor: autoZoom ? "#0070f3" : "#aaa", color: "white", border: "none", cursor: "pointer", fontSize: "13px" }}
         >
-          {legendText[language].autoZoom}: {autoZoom ? "On" : "Off"}
+          {activeLegend.autoZoom}: {autoZoom ? "On" : "Off"}
         </button>
         {legendKeys.map((key) => (
           <div key={key}>
@@ -142,7 +143,7 @@ export default function MapPage() {
                 textAlign: 'left'
               }}
             >
-              <span style={{ color: legendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText[language][key]}
+              <span style={{ color: legendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {activeLegend[key]}
             </button>
           </div>
         ))}
