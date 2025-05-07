@@ -7,7 +7,7 @@ const customIcon = L.icon({
   iconAnchor: [15, 45],
   popupAnchor: [0, -40],
 });
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Tooltip, Polyline, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 
@@ -31,6 +31,7 @@ export default function LeafletMap({ passes, selectedPass, autoZoom, centerOffse
       center={[47.0, 8.0]}
       zoom={8}
       scrollWheelZoom={true}
+      zoomControl={false}
       style={{ height: "100%", width: "100%" }}
     >
       <TileLayer
@@ -40,9 +41,7 @@ export default function LeafletMap({ passes, selectedPass, autoZoom, centerOffse
 
       {selectedPass && selectedPass.marker_lat && selectedPass.marker_lng && (
         <Marker key={selectedPass.id} position={[selectedPass.marker_lat, selectedPass.marker_lng]} icon={customIcon}>
-          <Popup>
-            <strong>{selectedPass.name}</strong>
-          </Popup>
+          <Tooltip direction="top" offset={[0, -10]} permanent>{selectedPass.name}</Tooltip>
         </Marker>
       )}
 
@@ -76,3 +75,4 @@ export default function LeafletMap({ passes, selectedPass, autoZoom, centerOffse
     </MapContainer>
   );
 }
+

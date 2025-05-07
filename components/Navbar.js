@@ -66,9 +66,10 @@ export default function Navbar() {
 
         <div style={{
           position: "absolute",
-          left: "40px",
-          top: "50%",
-          transform: "translateY(-50%)",
+          left: isMobile ? "0" : "40px",
+          top: isMobile ? "100%" : "50%",
+          transform: isMobile ? "none" : "translateY(-50%)",
+          flexDirection: isMobile ? "column" : "row",
           display: "flex",
           gap: "8px",
           opacity: expanded ? 1 : 0,
@@ -102,39 +103,62 @@ export default function Navbar() {
       </div>
 
       {/* Zentrale Gruppe: Button + Titel */}
-      <div
-        onClick={() => router.push("/")}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          position: "absolute",
-          left: "50%",
-          transform: "translateX(-50%)",
-          cursor: "pointer",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <img
-          src="/images/adler1.png"
-          alt="Startseite"
+          src="/images/passstrasse_motorrad_oldtimer_final.jpg"
+          alt="Roadpage"
+          onClick={() => router.push("/roadpage")}
+          onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+          onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
           style={{
             height: "36px",
             width: "auto",
+            cursor: "pointer",
             borderRadius: "6px",
             boxShadow: "0 0 4px rgba(0,0,0,0.2)",
-            transition: "transform 0.2s",
+            transition: "transform 0.2s"
           }}
-          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
         />
+        <img
+          src="/images/map_alpenkarte_roadtrip_corrected.jpg"
+          alt="Map"
+          onClick={() => router.push("/map")}
+          onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+          onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+          style={{
+            height: "36px",
+            width: "auto",
+            cursor: "pointer",
+            borderRadius: "6px",
+            boxShadow: "0 0 4px rgba(0,0,0,0.2)",
+            transition: "transform 0.2s"
+          }}
+        />
+        <div
+          onClick={() => router.push("/")}
+          style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
+          <img
+            src="/images/adler1.png"
+            alt="Startseite"
+            style={{
+              height: "36px",
+              width: "auto",
+              borderRadius: "6px",
+              boxShadow: "0 0 4px rgba(0,0,0,0.2)",
+              transition: "transform 0.2s",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          />
         <span style={{
-          fontSize: "20px",
-          fontWeight: "bold",
-          color: darkMode ? "#00ccff" : "#003366",
-          userSelect: "none",
-        }}>
-          Road Eagle/testversion
-        </span>
+            fontSize: "20px",
+            fontWeight: "bold",
+            color: darkMode ? "#00ccff" : "#003366",
+            userSelect: "none"
+          }}>
+            Road Eagle/testversion
+          </span>
+        </div>
       </div>
 
       {/* Darkmode */}
