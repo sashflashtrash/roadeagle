@@ -67,7 +67,7 @@ export default function MapPage() {
       list: "Liste",
     },
     EN: {
-      closed: "Pass closed",
+      closes: "Pass closed",
       open: "Pass open",
       low: "Flat road",
       transit: "Highway",
@@ -82,7 +82,7 @@ export default function MapPage() {
       list: "List",
     },
     FR: {
-      closed: "Col fermé",
+      closes: "Col fermé",
       open: "Col ouvert",
       low: "Rue",
       transit: "Autoroute",
@@ -97,7 +97,7 @@ export default function MapPage() {
       list: "Liste",
     },
     IT: {
-      closed: "Passo chiuso",
+      closes: "Passo chiuso",
       open: "Passo aperto",
       low: "Strada",
       transit: "Autostrada",
