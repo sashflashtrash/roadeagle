@@ -166,7 +166,14 @@ export default function LeafletMapBack({ selectedPassId, selectedPassName }) {
       circle_center_lng: circle?.center.lng || null,
       circle_radius: circle?.radius || null
     };
-    const { error } = await supabase.from('passes').insert([updates]);
+    if (!selectedPassId) {
+      alert("❌ Kein Pass ausgewählt – kann nicht speichern.");
+      return;
+    }
+    const { error } = await supabase
+      .from('passes')
+      .update(updates)
+      .eq('id', selectedPassId);
     if (!error) alert("✅ Erfolgreich gespeichert.");
     else alert("❌ Fehler beim Speichern: " + error.message);
   };

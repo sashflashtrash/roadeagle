@@ -4,9 +4,9 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import { useAppContext } from "../contexts/AppContext";
-import useRoads from "../components/roads";
-import SidebarMap from "../components/SidebarMap";
-import SidebarMapMobile from "../components/SidebarMapMobile";
+import Roads from "../components/roads";
+import SidebarMap from "../components/sidebarmap";
+import SidebarMapMobile from "../components/sidebarmapmobile";
 
 const LeafletMap = dynamic(() => import("../components/LeafletMap"), {
   ssr: false,
@@ -21,27 +21,14 @@ export default function MapPage() {
   const [isMobile, setIsMobile] = useState(false);
 
   const {
-  filteredPasses,
-  favorites,
-  toggleFavorite,
-  search,
-  setSearch,
-  showOnlyFavorites,
-  setShowOnlyFavorites,
-  typeFilter,
-  setTypeFilter,
-  levelFilter,
-  setLevelFilter,
-  countryFilter,
-  setCountryFilter,
-  cantonFilter,
-  setCantonFilter,
-  regionFilter,
-  setRegionFilter,
-  statusFilter,
-  setStatusFilter
-} = useRoads();
-
+    filteredPasses,
+    favorites,
+    toggleFavorite,
+    searchTerm,
+    setSearchTerm,
+    legendFilters,
+    toggleLegendFilter,
+  } = Roads();
 
   useEffect(() => {
     const handleResize = () => {
@@ -141,7 +128,7 @@ export default function MapPage() {
         {legendKeys.map((key) => (
           <div key={key}>
             <button
-              onClick={() => setStatusFilter(key)}
+              onClick={() => toggleLegendFilter(key)}
               style={{
                 backgroundColor: 'transparent',
                 border: '1px solid #ccc',
@@ -155,7 +142,7 @@ export default function MapPage() {
                 textAlign: 'left'
               }}
             >
-              <span style={{ color: statusFilter === key ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText[language][key]}
+              <span style={{ color: legendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText[language][key]}
             </button>
           </div>
         ))}
@@ -168,8 +155,8 @@ export default function MapPage() {
           language={language}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          search={search}
-          setSearch={setSearch}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
           legendText={legendText}
           filteredPasses={filteredPasses}
           selectedPass={selectedPass}
@@ -183,8 +170,8 @@ export default function MapPage() {
           language={language}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
-          search={search}
-          setSearch={setSearch}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
           legendText={legendText}
           filteredPasses={filteredPasses}
           selectedPass={selectedPass}
