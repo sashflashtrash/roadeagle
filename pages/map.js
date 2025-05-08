@@ -142,7 +142,7 @@ export default function MapPage() {
                 textAlign: 'left'
               }}
             >
-              <span style={{ color: legendFilters[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText[language][key]}
+              <span style={{ color: legendFilters?.[key] ? legendColors[key] : '#999', fontWeight: 'bold' }}>⬤</span> {legendText?.[language]?.[key] || key}
             </button>
           </div>
         ))}
